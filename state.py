@@ -211,7 +211,7 @@ class GameState:
         return clone
 
     # game finished
-    def set_game_over(self, winner: str | None) -> None:
+    def set_game_over(self, winner: str | None = None) -> None:
         self.game_over = True
         self.winner = winner
 
