@@ -246,7 +246,7 @@ class GameState:
         return (row, col) == self.throne
 
     # corners and throne are for the king only
-    def is_illegal(self, row, col) -> bool:
+    def is_restricted(self, row, col) -> bool:
         return self.is_corner(row, col) or self.is_throne(row, col)
 
     # return king posotion or None if king is captured
