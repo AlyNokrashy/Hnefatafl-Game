@@ -1,10 +1,12 @@
 import copy
 
+from typing_extensions import CapsuleType
+
 from constants import (ATTACKER, ATTACKER_PLAYER, BOARD_11, DEFAULT_BOARD_SIZE,
                        DEFENDER, DEFENDER_PLAYER, EMPTY, KING)
 
 
-class GamState:
+class GameState:
     # board[row][col]
     def __init__(self, board_size: int = DEFAULT_BOARD_SIZE):
         self.board_size = board_size
@@ -141,6 +143,8 @@ class GamState:
             for row, col in attacker_positions:
                 board[row][col] = ATTACKER
 
+    # ------- Public --------------------------------------------------------------------------------------------------------------------------
+
     # returns copy of the current game state as a dict
     def get_state(self) -> dict:
         return {
@@ -152,3 +156,72 @@ class GamState:
             "throne": self.throne,
             "corners": list(self.corners),
         }
+
+    # executes a VALIDATED/LEGAL move
+    # returns true -> move applied
+    def apply_move(
+        self,
+        from_position,
+        to_position,
+        captured_positions: list[tuple[int, int]] | None = None,
+    ) -> bool:
+        from_row, from_col = from_position
+        to_row, to_col = to_position
+
+        # if source empty
+        piece = self.board[from_row][from_col]
+        if piece == EMPTY:
+            return False
+
+        self.move_history.append(
+            {
+                "from": from_position,
+                "to": to_position,
+                "piece": piece,
+                "captures": (
+                    list(captured_positions)  # makes a copy of captured_positions
+                    if captured_positions
+                    else []
+                ),
+            }
+        )
+
+        # move piece
+        self.board[to_row][to_col] = piece
+        self.board[from_row][from_col] = EMPTY
+
+        # remove captured
+        if captured_positions:
+            for row, col in captured_positions:
+                self.board[row][col] = EMPTY
+
+        # next turn
+        self._switch_player()
+        return True
+
+    # returns a copy of the game state (for the AI)
+    def clone_state(self) -> "GameState":
+        clone = GameState.__new__(GameState)  # creates empty GameState
+        clone.board_size = self.board_size
+        clone.board = copy.deepcopy(self.board)
+        clone.current_player = self.current_player
+        clone.game_over = self.game_over
+        clone.winner = self.winner
+        clone.throne = self.throne
+        clone.corners = list(self.corners)
+        clone.move_history = []
+        return clone
+
+    # game finished
+    def set_game_over(self, winner: str | None) -> None:
+        self.game_over = True
+        self.winner = winner
+
+    # ------------------ Helpers ---------------------------------------------------------------------------------------------------------------------
+
+    def _switch_player(self) -> None:
+        self.current_player = (
+            DEFENDER_PLAYER
+            if self.current_player == ATTACKER_PLAYER
+            else ATTACKER_PLAYER
+        )
