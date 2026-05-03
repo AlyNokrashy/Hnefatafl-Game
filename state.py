@@ -119,27 +119,27 @@ class GameState:
         for offset_row, offset_col in defender_offsets:
             board[mid + offset_row][mid + offset_col] = DEFENDER
 
-            # 16 Attackers
-            attacker_positions = [
-                (0, 3),
-                (0, 4),
-                (0, 5),
-                (1, 4),
-                (8, 3),
-                (8, 4),
-                (8, 5),
-                (7, 4),
-                (3, 0),
-                (4, 0),
-                (5, 0),
-                (4, 1),
-                (3, 8),
-                (4, 8),
-                (5, 8),
-                (4, 7),
-            ]
-            for row, col in attacker_positions:
-                board[row][col] = ATTACKER
+        # 16 Attackers
+        attacker_positions = [
+            (0, 3),
+            (0, 4),
+            (0, 5),
+            (1, 4),
+            (8, 3),
+            (8, 4),
+            (8, 5),
+            (7, 4),
+            (3, 0),
+            (4, 0),
+            (5, 0),
+            (4, 1),
+            (3, 8),
+            (4, 8),
+            (5, 8),
+            (4, 7),
+        ]
+        for row, col in attacker_positions:
+            board[row][col] = ATTACKER
 
     # ------- Public --------------------------------------------------------------------------------------------------------------------------
 
@@ -243,7 +243,7 @@ class GameState:
         return (row, col) in self.corners
 
     def is_throne(self, row, col) -> bool:
-        return (row, col) in self.throne
+        return (row, col) == self.throne
 
     # corners and throne are for the king only
     def is_illegal(self, row, col) -> bool:
