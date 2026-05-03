@@ -1,7 +1,5 @@
 import copy
 
-from typing_extensions import CapsuleType
-
 from constants import (ATTACKER, ATTACKER_PLAYER, BOARD_11, DEFAULT_BOARD_SIZE,
                        DEFENDER, DEFENDER_PLAYER, EMPTY, KING)
 
@@ -225,3 +223,54 @@ class GameState:
             if self.current_player == ATTACKER_PLAYER
             else ATTACKER_PLAYER
         )
+
+    # return piece at (row,col) or None if out of bounds
+    def get_piece_at(self, row, col) -> int | None:
+        if 0 <= row < self.board_size and 0 <= col < self.board_size:
+            return self.board[row][col]
+        return None
+
+    # return all (row, col) that have the given piece_type
+    def get_all_pieces(self, piece_type) -> list[tuple[int, int]]:
+        return [
+            (row, col)
+            for row in range(self.board_size)
+            for col in range(self.board_size)
+            if self.board[row][col] == piece_type
+        ]
+
+    def is_corner(self, row, col) -> bool:
+        return (row, col) in self.corners
+
+    def is_throne(self, row, col) -> bool:
+        return (row, col) in self.throne
+
+    # corners and throne are for the king only
+    def is_illegal(self, row, col) -> bool:
+        return self.is_corner(row, col) or self.is_throne(row, col)
+
+    # return king posotion or None if king is captured
+    def get_king_position(self) -> tuple[int, int] | None:
+        positions = self.get_all_pieces(KING)
+        return positions[0] if positions else None
+
+    # piece count
+    def count_pieces(self) -> dict:
+        count = {ATTACKER: 0, DEFENDER: 0, KING: 0}
+        for row in range(self.board_size):
+            for col in range(self.board_size):
+                piece = self.board[row][col]
+                if piece in count:
+                    count[piece] += 1
+        return count
+
+    # ----------------------------------------------------------------------------------------------------------------
+
+    def __str__(self) -> str:
+        symbols = {EMPTY: ".", ATTACKER: "A", DEFENDER: "D", KING: "K"}
+        header = "   " + " ".join("ABCDEFGHIJK"[: self.board_size])
+        rows = [
+            f"{i+1:2} " + " ".join(symbols[cell] for cell in row)
+            for i, row in enumerate(self.board)
+        ]
+        return "\n".join([header] + rows)
