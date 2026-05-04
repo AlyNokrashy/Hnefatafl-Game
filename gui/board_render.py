@@ -50,4 +50,24 @@ class BoardRenderer:
 
         # ---- Drawing -----------------------------------------------------------------------------------------
 
-        # def draw(self) -> None
+        # draws board:
+        # 1.draw cell
+        # 2.draw highlights
+        # 3.draw pieces
+        def draw(self) -> None:
+            self._draw_cells()
+            self._draw_highlights()
+            self._draw_pieces()
+
+        # draw row and col labels around board
+        def draw_labels(self, font) -> None:
+            size = self.game_state.board_size
+            labels = "ABCDEFGHIJK"
+            dim = (120, 100, 70)
+            for i in range(size):
+                surface = font.render(labels[i], True, dim)
+                cx = self.margin + i * self.cs + self.cs // 2
+                self.screen.blit(surface, (cx - surface.get_width() // 2, 8))
+                surface = font.render(str(i + 1), True, dim)
+                cy = self.margin + i * self.cs + self.cs // 2
+                self.screen.blit(surface, (8, cy - surface.get_height() // 2))
