@@ -7,6 +7,7 @@ from constants import (ATTACKER_PLAYER, BOARD_MARGIN, CELL_SIZE,
                        FPS, INFO_PANEL_WIDTH, WINDOW_TITLE)
 from gui.board_renderer import BoardRenderer
 from state import GameState
+from rules import get_possible_moves, is_current_player_piece, check_captures, game_over
 
 # ── Colors ─────────────────────────────────
 BG_COLOR = (30, 25, 20)
@@ -145,17 +146,23 @@ def main(board_size: int = DEFAULT_BOARD_SIZE, difficulty: str = "Medium"):
         if pos is None:
             return
 
-        # ── Member 2 replaces this block ──────────────────────
-        if renderer.selected_position is None:
-            piece = game_state.get_piece_at(*pos)
-            if piece and piece != 0:
-                renderer.set_selection(pos, valid_moves=[])
-                # Member 2: moving pieces logic
-        else:
-            # Member 2: validate move, compute captures, call apply_move
-
+        piece = game_state.get_piece_at(*pos)
+        
+        # If player chose one of his pieces, get the valid moves of it
+        if is_current_player_piece(game_state, piece):
+            valid_moves = get_possible_moves(game_state, pos)
+            renderer.set_selection(pos, valid_moves)
+        
+        # If a valid move of the selected piece was chosen, apply the move 
+        elif renderer.selected_position and pos in renderer.valid_moves:
+            from_position = renderer.selected_position
+            captured_position = check_captures(game_state, pos)
+            game_state.apply_move(from_position, pos, captured_position)
             renderer.clear_selection()
-        # ── Member 2 block ends ───────────────────────────────
+        
+        # Invalid move
+        else:
+            renderer.clear_selection()
 
     # ── Game loop ─────────────────────────────────────────────
     running = True
