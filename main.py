@@ -156,8 +156,11 @@ def main(board_size: int = DEFAULT_BOARD_SIZE, difficulty: str = "Medium"):
         # If a valid move of the selected piece was chosen, apply the move 
         elif renderer.selected_position and pos in renderer.valid_moves:
             from_position = renderer.selected_position
-            captured_position = check_captures(game_state, pos)
-            game_state.apply_move(from_position, pos, captured_position)
+            # print(captured_position)
+            game_state.apply_move(from_position, pos)
+            captured_positions = check_captures(game_state, pos)
+            game_state.record_move(from_position, pos, captured_positions)
+
             renderer.clear_selection()
         
         # Invalid move
@@ -169,6 +172,9 @@ def main(board_size: int = DEFAULT_BOARD_SIZE, difficulty: str = "Medium"):
     while running:
         clock.tick(FPS)
 
+        if game_over(game_state):
+            print("Game over")
+            
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
