@@ -160,9 +160,7 @@ class GameState:
     def apply_move(
         self,
         from_position,
-        to_position,
-        captured_positions: list[tuple[int, int]] | None = None,
-    ) -> bool:
+        to_position) -> bool:
         from_row, from_col = from_position
         to_row, to_col = to_position
 
@@ -171,6 +169,20 @@ class GameState:
         if piece == EMPTY:
             return False
 
+        # move piece
+        self.board[to_row][to_col] = piece
+        self.board[from_row][from_col] = EMPTY
+
+        return True
+
+    def record_move(self,
+        from_position,
+        to_position,
+        captured_positions: list[tuple[int, int]] | None = None):
+
+        from_row, from_col = from_position
+
+        piece = self.board[from_row][from_col]
         self.move_history.append(
             {
                 "from": from_position,
@@ -184,10 +196,6 @@ class GameState:
             }
         )
 
-        # move piece
-        self.board[to_row][to_col] = piece
-        self.board[from_row][from_col] = EMPTY
-
         # remove captured
         if captured_positions:
             for row, col in captured_positions:
@@ -195,7 +203,6 @@ class GameState:
 
         # next turn
         self._switch_player()
-        return True
 
     # returns a copy of the game state (for the AI)
     def clone_state(self) -> "GameState":
