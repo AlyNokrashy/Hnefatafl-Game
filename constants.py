@@ -1,4 +1,4 @@
-# ── Piece types (stored in board cells) ──────────────────────
+# ── Piece types ──────────────────────
 EMPTY = 0
 ATTACKER = 1
 DEFENDER = 2
@@ -13,14 +13,14 @@ BOARD_9 = 9
 BOARD_11 = 11
 DEFAULT_BOARD_SIZE = 11
 
-# ── GUI — Cell & layout ──────────────────────────────────────
+# ── GUI ──────────────────────────────────────
 CELL_SIZE = 62  # pixels per cell
 BOARD_MARGIN = 36  # pixels around the grid
 INFO_PANEL_WIDTH = 220  # right-side panel
 FPS = 60
 WINDOW_TITLE = "Hnefatafl — Viking Chess  ·   AI Project"
 
-# ── Colours (R, G, B) ────────────────────────────────────────
+# ── Colors ────────────────────────────────────────
 COLOR_LIGHT = (240, 217, 181)
 COLOR_DARK = (181, 136, 99)
 COLOR_THRONE = (255, 200, 50)
