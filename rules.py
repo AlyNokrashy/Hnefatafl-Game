@@ -36,8 +36,9 @@ def get_possible_moves(game_state, position) -> list[tuple[int, int]]:
 def is_valid_move(board_size, game_state, position) -> bool:
     row, col = position
 
+    piece = game_state.get_piece_at(row, col)
     if (within_board(board_size, row, col)
-            and game_state.get_piece_at(row, col) == EMPTY):
+            and piece == EMPTY):
         
         if game_state.current_player == ATTACKER_PLAYER:   
             return not game_state.is_restricted(row, col)
@@ -61,21 +62,39 @@ def is_current_player_piece(game_state, piece) -> bool:
 
 def check_captures(game_state, pos) -> list[tuple[int, int]]:
     row, col = pos
-    current_player_pieces = [ATTACKER] if game_state.current_player == ATTACKER_PLAYER else [DEFENDER, KING]
-    opponent = [DEFENDER, KING] if game_state.current_player == ATTACKER_PLAYER else [ATTACKER]
+    current_player_pieces = [ATTACKER] if game_state.current_player == ATTACKER_PLAYER else [DEFENDER]
+    opponent = [DEFENDER] if game_state.current_player == ATTACKER_PLAYER else [ATTACKER]
     captured = []
     board_size = game_state.board_size
 
-    def is_ally_or_hostile(r, c, team):
-        if not within_board(board_size, r, c):
-            return False
+    def is_ally_or_hostile(r, c, team):        
         piece = game_state.get_piece_at(r, c)
+        # print(game_state)
+        # print(piece)
+        # print(team)
         if piece and piece in team:
             return True
+        
         return game_state.is_restricted(r, c)
 
-    def check_sandwiched(r, c, attacking_pieces):
+    def check_sandwiched(r, c, attacking_pieces):        
+        piece = game_state.get_piece_at(r, c)
+        if not piece or piece == KING:
+            return False # King has a special case
         
+        axes = [
+            ((r - 1, c), (r + 1, c)),  # Vertical
+            ((r, c - 1), (r, c + 1)),  # Horizontal
+        ]
+
+        for (r1, c1), (r2, c2) in axes:
+            if (within_board(board_size, r1, c1)
+                and is_ally_or_hostile(r1, c1, attacking_pieces) 
+                and within_board(board_size, r2, c2) 
+                and is_ally_or_hostile(r2, c2, attacking_pieces)):
+                # print("YEAAY")
+                return True
+
         return False
 
     # 1. Check opponent neighbors sandwiched by the move
@@ -86,8 +105,11 @@ def check_captures(game_state, pos) -> list[tuple[int, int]]:
         adj_piece = game_state.get_piece_at(adj_r, adj_c)
         if not adj_piece or is_current_player_piece(game_state, adj_piece):
             continue
+        # print("Reached here!")
         if check_sandwiched(adj_r, adj_c, current_player_pieces):
+            # print(f"Found sandwich at {adj_r}, {adj_c}")
             captured.append((adj_r, adj_c))
+            # print("Capture added")
 
     # 2. Check if moved piece walked into a sandwich
     if check_sandwiched(row, col, opponent):
