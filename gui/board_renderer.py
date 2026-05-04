@@ -108,8 +108,11 @@ class BoardRenderer:
             )
         for position in self.valid_moves:
             x, y = self.board_to_screen(*position)
-            cx, cy = x + cell_size // 2, y + cell_size // 2
-            pygame.draw.rect(self.screen, COLOR_VALID, (cx, cy), cell_size // 6)
+            size = cell_size // 3
+            offset = (cell_size - size) // 2
+
+            rect = (x + offset, y + offset, size, size)
+            pygame.draw.rect(self.screen, COLOR_VALID, rect)
 
     # draws all peieces
     def _draw_pieces(self) -> None:
