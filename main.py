@@ -172,8 +172,8 @@ def main(board_size: int = DEFAULT_BOARD_SIZE, difficulty: str = "Medium"):
     while running:
         clock.tick(FPS)
 
-        if game_over(game_state):
-            print("Game over")
+        # if game_over(game_state):
+        #     print("Game over")
             
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
