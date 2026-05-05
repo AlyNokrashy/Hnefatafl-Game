@@ -4,6 +4,13 @@ ATTACKER = 1
 DEFENDER = 2
 KING = 3
 
+DIRECTIONS = [
+    (-1, 0), # Up
+    (1, 0),  # Down
+    (0, -1), # Left
+    (0, 1)   # Right
+]
+
 # ── Players ──────────────────────────────────────────────────
 ATTACKER_PLAYER = "attacker"
 DEFENDER_PLAYER = "defender"
@@ -39,4 +46,16 @@ DIFFICULTY_DEPTH = {
     "Easy": 1,
     "Medium": 3,
     "Hard": 5,
+}
+
+DIFFICULTIES = {
+    "Easy": 0,
+    "Medium": 1,
+    "Hard": 2
+}
+# ["Easy", "Medium", "Hard"]
+ROLES        = {
+    "Attacker": 1,
+    "Defender": 0
+
 }

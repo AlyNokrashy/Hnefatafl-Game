@@ -1,11 +1,5 @@
-from constants import EMPTY, ATTACKER, ATTACKER_PLAYER, DEFENDER_PLAYER, DEFENDER, KING
+from constants import EMPTY, ATTACKER, ATTACKER_PLAYER, DEFENDER_PLAYER, DEFENDER, KING, DIRECTIONS
 
-directions = [
-    (-1, 0), # Up
-    (1, 0),  # Down
-    (0, -1), # Left
-    (0, 1)   # Right
-]
 
 def get_possible_moves(game_state, position) -> list[tuple[int, int]]:
     
@@ -13,7 +7,7 @@ def get_possible_moves(game_state, position) -> list[tuple[int, int]]:
     board_size = game_state.board_size
     row, col = position
 
-    for row_direction, col_direction in directions:
+    for row_direction, col_direction in DIRECTIONS:
 
         current_row = row + row_direction 
         current_col = col + col_direction
@@ -24,7 +18,7 @@ def get_possible_moves(game_state, position) -> list[tuple[int, int]]:
             if game_state.get_piece_at(current_row, current_col) != EMPTY:
                 break
             
-            if is_valid_move(board_size, game_state, (current_row, current_col)):
+            if is_valid_move(game_state, (current_row, current_col)):
                 valid_moves.append((current_row, current_col))
 
             current_row += row_direction
@@ -33,7 +27,8 @@ def get_possible_moves(game_state, position) -> list[tuple[int, int]]:
     return valid_moves
 
 
-def is_valid_move(board_size, game_state, position) -> bool:
+def is_valid_move(game_state, position) -> bool:
+    board_size = game_state.board_size
     row, col = position
 
     piece = game_state.get_piece_at(row, col)
@@ -98,7 +93,7 @@ def check_captures(game_state, pos) -> list[tuple[int, int]]:
         return False
 
     # 1. Check opponent neighbors sandwiched by the move
-    for dr, dc in directions:
+    for dr, dc in DIRECTIONS:
         adj_r, adj_c = row + dr, col + dc
         if not within_board(board_size, adj_r, adj_c):
             continue
@@ -119,30 +114,10 @@ def check_captures(game_state, pos) -> list[tuple[int, int]]:
     king_pos = game_state.get_king_position()
     if king_pos and game_state.current_player == ATTACKER_PLAYER:
         kr, kc = king_pos
-        if all(is_ally_or_hostile(kr + dr, kc + dc, current_player_pieces) for dr, dc in directions):
+        if all(is_ally_or_hostile(kr + dr, kc + dc, current_player_pieces) for dr, dc in DIRECTIONS):
             captured.append((kr, kc))
 
     return captured
 
 
     
-def game_over(game_state):
-    king_pos = game_state.get_king_position()
-
-    # Attackers win: king captured
-    if king_pos is None:
-        return True
-
-    # Defenders win: king reached a corner
-    kr, kc = king_pos
-    if game_state.is_corner(kr, kc):
-        return True
-
-    # Current player has no moves
-    pieces = [ATTACKER] if game_state.current_player == ATTACKER_PLAYER else [DEFENDER, KING]
-    for piece in pieces:
-        for position in game_state.get_all_pieces(piece):
-            if get_possible_moves(game_state, position):
-                return False
-
-    return True

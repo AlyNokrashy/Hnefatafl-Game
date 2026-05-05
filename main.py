@@ -3,11 +3,11 @@ import sys
 import pygame
 
 from constants import (ATTACKER_PLAYER, BOARD_MARGIN, CELL_SIZE,
-                       DEFAULT_BOARD_SIZE, DEFENDER_PLAYER, DIFFICULTY_DEPTH,
+                       DEFAULT_BOARD_SIZE, DEFENDER_PLAYER, DIFFICULTIES, ROLES,
                        FPS, INFO_PANEL_WIDTH, WINDOW_TITLE)
 from gui.board_renderer import BoardRenderer
 from logic.state import GameState
-from logic.rules import get_possible_moves, is_current_player_piece, check_captures, game_over
+from logic.rules import get_possible_moves, is_current_player_piece, check_captures
 from logic.ai import AI_Player
 from gui.choiceMenu import run_menu
 
@@ -73,7 +73,7 @@ def draw_panel(screen, panel_x, game_state, difficulty, fonts):
     s = font_med.render(difficulty, True, TEXT_COLOR)
     screen.blit(s, (x, y))
     y += s.get_height() + 2
-    s = font_sm.render(f"Depth: {DIFFICULTY_DEPTH[difficulty]}", True, DIM_COLOR)
+    s = font_sm.render(f"Depth: {DIFFICULTIES.get(difficulty)}", True, DIM_COLOR)
     screen.blit(s, (x, y))
     y += s.get_height() + 16
 
@@ -139,8 +139,10 @@ def main(board_size: int = DEFAULT_BOARD_SIZE):
     panel_x = CELL_SIZE * board_size + BOARD_MARGIN * 2
 
     game_state = GameState(board_size)
-    aiPlayer = AI_Player(difficulty=difficulty, role=aiRole, gameState=game_state)
+    aiPlayer = AI_Player(difficulty=DIFFICULTIES.get(difficulty), isAttacker=ROLES.get(aiRole))
     renderer = BoardRenderer(screen, game_state)
+    # print(game_state.getAttackerPieces())
+    # print(game_state.getDefenderPieces())
 
     # ── Click handler ─────────────────────────────────────────
     def handle_click(px, py):
@@ -189,7 +191,7 @@ def main(board_size: int = DEFAULT_BOARD_SIZE):
                 elif event.key == pygame.K_r:
                     aiRole, difficulty = run_menu(screen)
                     game_state = GameState(board_size)
-                    aiPlayer = AI_Player(difficulty=difficulty, role=aiRole, gameState=game_state)
+                    aiPlayer = AI_Player(difficulty=DIFFICULTIES.get(difficulty), isAttacker=ROLES.get(aiRole))
                     renderer = BoardRenderer(screen, game_state)
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 handle_click(*event.pos)
