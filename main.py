@@ -6,8 +6,8 @@ from constants import (ATTACKER_PLAYER, BOARD_MARGIN, CELL_SIZE,
                        DEFAULT_BOARD_SIZE, DEFENDER_PLAYER, DIFFICULTY_DEPTH,
                        FPS, INFO_PANEL_WIDTH, WINDOW_TITLE)
 from gui.board_renderer import BoardRenderer
-from state import GameState
-from rules import get_possible_moves, is_current_player_piece, check_captures, game_over
+from logic.state import GameState
+from logic.rules import get_possible_moves, is_current_player_piece, check_captures, game_over
 
 # ── Colors ─────────────────────────────────
 BG_COLOR = (30, 25, 20)
