@@ -8,6 +8,8 @@ from constants import (ATTACKER_PLAYER, BOARD_MARGIN, CELL_SIZE,
 from gui.board_renderer import BoardRenderer
 from logic.state import GameState
 from logic.rules import get_possible_moves, is_current_player_piece, check_captures, game_over
+from logic.ai import AI_Player
+from gui.choiceMenu import run_menu
 
 # ── Colors ─────────────────────────────────
 BG_COLOR = (30, 25, 20)
@@ -119,12 +121,14 @@ def draw_panel(screen, panel_x, game_state, difficulty, fonts):
         by += s.get_height() + 3
 
 
-def main(board_size: int = DEFAULT_BOARD_SIZE, difficulty: str = "Medium"):
+def main(board_size: int = DEFAULT_BOARD_SIZE):
     pygame.init()
 
     w, h = window_size(board_size)
     screen = pygame.display.set_mode((w, h))
     pygame.display.set_caption(WINDOW_TITLE)
+    aiRole, difficulty = run_menu(screen)
+
     clock = pygame.time.Clock()
 
     font_big = pygame.font.SysFont("Segoe UI", 20, bold=True)
@@ -135,6 +139,7 @@ def main(board_size: int = DEFAULT_BOARD_SIZE, difficulty: str = "Medium"):
     panel_x = CELL_SIZE * board_size + BOARD_MARGIN * 2
 
     game_state = GameState(board_size)
+    aiPlayer = AI_Player(difficulty=difficulty, role=aiRole, gameState=game_state)
     renderer = BoardRenderer(screen, game_state)
 
     # ── Click handler ─────────────────────────────────────────
@@ -182,7 +187,9 @@ def main(board_size: int = DEFAULT_BOARD_SIZE, difficulty: str = "Medium"):
                 if event.key == pygame.K_q:
                     running = False
                 elif event.key == pygame.K_r:
+                    aiRole, difficulty = run_menu(screen)
                     game_state = GameState(board_size)
+                    aiPlayer = AI_Player(difficulty=difficulty, role=aiRole, gameState=game_state)
                     renderer = BoardRenderer(screen, game_state)
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 handle_click(*event.pos)
@@ -202,4 +209,4 @@ def main(board_size: int = DEFAULT_BOARD_SIZE, difficulty: str = "Medium"):
 
 
 if __name__ == "__main__":
-    main(board_size=DEFAULT_BOARD_SIZE, difficulty="Medium")
+    main(board_size=DEFAULT_BOARD_SIZE)
