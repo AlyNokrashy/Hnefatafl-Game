@@ -25,6 +25,7 @@ CELL_SIZE = 62  # pixels per cell
 BOARD_MARGIN = 36  # pixels around the grid
 INFO_PANEL_WIDTH = 220  # right-side panel
 FPS = 60
+DELAY = 700 # 0.3 second
 WINDOW_TITLE = "Hnefatafl — Viking Chess  ·   AI Project"
 
 # ── Colors ────────────────────────────────────────

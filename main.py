@@ -4,148 +4,31 @@ import pygame
 
 from constants import (ATTACKER_PLAYER, BOARD_MARGIN, CELL_SIZE,
                        DEFAULT_BOARD_SIZE, DEFENDER_PLAYER, DIFFICULTIES, ROLES,
-                       FPS, INFO_PANEL_WIDTH, WINDOW_TITLE, ATTACKER, DEFENDER)
+                       FPS, INFO_PANEL_WIDTH, WINDOW_TITLE, ATTACKER, DEFENDER, DELAY)
 from gui.board_renderer import BoardRenderer
 from logic.state import GameState
 from logic.rules import get_possible_moves, is_current_player_piece, check_captures
 from logic.ai import AI_Player
 from gui.choiceMenu import run_menu
 
-# ── Colors ─────────────────────────────────
-BG_COLOR = (30, 25, 20)
-PANEL_COLOR = (20, 18, 14)
-TEXT_COLOR = (220, 210, 190)
-DIM_COLOR = (120, 110, 90)
-ACCENT = (210, 165, 40)
-
-
-def window_size(board_size: int) -> tuple:
-    board_px = CELL_SIZE * board_size + BOARD_MARGIN * 2
-    return board_px + INFO_PANEL_WIDTH, board_px
-
-
-def draw_panel(screen, panel_x, game_state, difficulty, fonts):
-    font_big, font_med, font_sm = fonts
-    w = INFO_PANEL_WIDTH
-    h = screen.get_height()
-    x = panel_x + 14
-
-    pygame.draw.rect(screen, PANEL_COLOR, (panel_x, 0, w, h))
-    pygame.draw.line(screen, (60, 50, 35), (panel_x, 0), (panel_x, h), 2)
-
-    y = 18
-
-    # Title
-    s = font_big.render("Hnefatafl", True, ACCENT)
-    screen.blit(s, (x, y))
-    y += s.get_height() + 2
-    s = font_sm.render("Viking Chess  ·   AI", True, DIM_COLOR)
-    screen.blit(s, (x, y))
-    y += s.get_height() + 16
-
-    # Divider
-    pygame.draw.line(screen, (60, 50, 35), (panel_x + 10, y), (panel_x + w - 10, y), 1)
-    y += 10
-
-    # Current turn
-    s = font_sm.render("Current Turn", True, DIM_COLOR)
-    screen.blit(s, (x, y))
-    y += s.get_height() + 4
-
-    player = game_state.current_player.capitalize()
-    color = (
-        (220, 80, 60)
-        if game_state.current_player == ATTACKER_PLAYER
-        else (200, 200, 180)
-    )
-    s = font_big.render(player, True, color)
-    screen.blit(s, (x, y))
-    y += s.get_height() + 16
-
-    # Divider
-    pygame.draw.line(screen, (60, 50, 35), (panel_x + 10, y), (panel_x + w - 10, y), 1)
-    y += 10
-
-    # Difficulty
-    s = font_sm.render("Difficulty", True, DIM_COLOR)
-    screen.blit(s, (x, y))
-    y += s.get_height() + 4
-    s = font_med.render(difficulty, True, TEXT_COLOR)
-    screen.blit(s, (x, y))
-    y += s.get_height() + 2
-    s = font_sm.render(f"Depth: {DIFFICULTIES.get(difficulty)}", True, DIM_COLOR)
-    screen.blit(s, (x, y))
-    y += s.get_height() + 16
-
-    # Divider
-    pygame.draw.line(screen, (60, 50, 35), (panel_x + 10, y), (panel_x + w - 10, y), 1)
-    y += 10
-
-    # Piece counts
-    s = font_sm.render("Pieces on board", True, DIM_COLOR)
-    screen.blit(s, (x, y))
-    y += s.get_height() + 4
-
-    counts = game_state.count_pieces()
-    for label, key, color in [
-        ("Attackers", 1, (220, 80, 60)),
-        ("Defenders", 2, (200, 200, 180)),
-    ]:
-        s = font_sm.render(f"{label}: {counts.get(key, 0)}", True, color)
-        screen.blit(s, (x, y))
-        y += s.get_height() + 3
-
-    # Game over
-    if game_state.game_over:
-        y += 16
-        pygame.draw.line(
-            screen, (60, 50, 35), (panel_x + 10, y), (panel_x + w - 10, y), 1
-        )
-        y += 12
-        winner = game_state.winner.capitalize() if game_state.winner else "Nobody"
-        s = font_big.render(f"{winner} wins!", True, ACCENT)
-        screen.blit(s, (x, y))
-        y += s.get_height() + 6
-        s = font_sm.render("Press R to restart", True, DIM_COLOR)
-        screen.blit(s, (x, y))
-
-    # Controls at bottom
-    by = h - 55
-    pygame.draw.line(
-        screen, (60, 50, 35), (panel_x + 10, by), (panel_x + w - 10, by), 1
-    )
-    by += 8
-    for line in ["[Click] Select / Move", "[R] Restart   [Q] Quit"]:
-        s = font_sm.render(line, True, DIM_COLOR)
-        screen.blit(s, (x, by))
-        by += s.get_height() + 3
-
 
 def main(board_size: int = DEFAULT_BOARD_SIZE):
     pygame.init()
 
-    w, h = window_size(board_size)
-    screen = pygame.display.set_mode((w, h))
-    pygame.display.set_caption(WINDOW_TITLE)
-    humanRole, difficulty = run_menu(screen)
-
-    clock = pygame.time.Clock()
-
-    font_big = pygame.font.SysFont("Segoe UI", 20, bold=True)
-    font_med = pygame.font.SysFont("Segoe UI", 16)
-    font_sm = pygame.font.SysFont("Segoe UI", 13)
-    fonts = (font_big, font_med, font_sm)
-
-    panel_x = CELL_SIZE * board_size + BOARD_MARGIN * 2
-
     game_state = GameState(board_size)
-    # Setting up the AI player
+    renderer = BoardRenderer(board_size, game_state)
+
+    humanRole, difficulty = run_menu(renderer.screen)
+    renderer.set_difficulty(difficulty)
+
     aiRole = ATTACKER_PLAYER if ROLES.get(humanRole) == DEFENDER_PLAYER else DEFENDER_PLAYER
     aiPlayer = AI_Player(difficulty=DIFFICULTIES.get(difficulty), role=aiRole)
-    renderer = BoardRenderer(screen, game_state)
+
+    # Setting up the AI player
     # print(game_state.getAttackerPieces())
     # print(game_state.getDefenderPieces())
 
+    clock = pygame.time.Clock()
 
     # ── Click handler ─────────────────────────────────────────
     def handle_click(px, py):
@@ -166,40 +49,63 @@ def main(board_size: int = DEFAULT_BOARD_SIZE):
         # If a valid move of the selected piece was chosen, apply the move 
         elif renderer.selected_position and pos in renderer.valid_moves:
             from_position = renderer.selected_position
-            # print(captured_position)
-            game_state.apply_move(from_position, pos)
-            captured_positions = check_captures(game_state, pos)
-            game_state.record_move(from_position, pos, captured_positions)
-
             renderer.clear_selection()
+            
+            game_state.apply_move(from_position, pos)
+            # renderer.update_board()
+            # pygame.display.flip()
+
+            captured_positions = check_captures(game_state, pos)
+            # print(captured_position)
+            
+            # pygame.time.delay(200)
+            game_state.record_move(from_position, pos, captured_positions)
+            return True
         
         # Invalid move
         else:
             renderer.clear_selection()
 
+        return False
+
+        # renderer.update_board()
+        # pygame.display.flip()
+
+
     # piece and move are tuples of coordinates
     def applyAIMove(piece, move):
         game_state.get_piece_at(piece[0], piece[1])
         valid_moves = get_possible_moves(game_state, piece)
-        currentTime = pygame.time.get_ticks()
+        
         renderer.set_selection(piece, valid_moves)
-        pygame.display.flip() # Force a redraw so we see the selection
 
         game_state.apply_move(piece, move)
         game_state.record_move(piece, move, check_captures(game_state, move))
         renderer.clear_selection()
 
         print("finished the second handle")
+
+        # renderer.update_board()
+        # pygame.display.flip() # Force a redraw so we see the selection
     
 
     # ── Game loop ─────────────────────────────────────────────
     running = True
+    last_move_time = - DELAY
+    can_go = True
     while running:
         clock.tick(FPS)
 
         # if game_over(game_state):
         #     print("Game over")
-            
+
+
+        current_time = pygame.time.get_ticks()
+        # print(last_move_time)
+        can_move = current_time - last_move_time > DELAY
+        can_go = True
+        
+        print(can_move)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -207,27 +113,32 @@ def main(board_size: int = DEFAULT_BOARD_SIZE):
                 if event.key == pygame.K_q:
                     running = False
                 elif event.key == pygame.K_r:
-                    humanRole, difficulty = run_menu(screen)
                     game_state = GameState(board_size)
+                    renderer = BoardRenderer(board_size, game_state)
+                    humanRole, difficulty = run_menu(renderer.screen)
                     aiRole = ATTACKER_PLAYER if ROLES.get(humanRole) == DEFENDER_PLAYER else DEFENDER_PLAYER
                     aiPlayer = AI_Player(difficulty=DIFFICULTIES.get(difficulty), role=aiRole)
-                    renderer = BoardRenderer(screen, game_state)
-            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                handle_click(*event.pos)
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and can_move:
+                is_move = handle_click(*event.pos)
+                if is_move:
+                    last_move_time = pygame.time.get_ticks()
+                    can_go = False
+                print("Click happened")
+
 
         # Memeber 3
-        if not game_state.game_over and game_state.current_player == aiRole:
+        if not game_state.game_over and game_state.current_player == aiRole and can_move and can_go:
+            print("AI moved")
             # Add a small delay or check so the AI doesn't move 
             # the exact millisecond the player finishes their turn
             initial, final = aiPlayer.getBestMove(gameState=game_state)
             print("got the move")
             applyAIMove(initial, final)
+            last_move_time = pygame.time.get_ticks()
         # ── Member 3 block ends ───────────────────────────────
 
-        screen.fill(BG_COLOR)
-        renderer.draw()
-        renderer.draw_labels(font_sm)
-        draw_panel(screen, panel_x, game_state, difficulty, fonts)
+    
+        renderer.update_board()
         pygame.display.flip()
 
     pygame.quit()

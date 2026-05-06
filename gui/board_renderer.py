@@ -3,12 +3,18 @@ import pygame
 from constants import (ATTACKER, BOARD_MARGIN, CELL_SIZE, COLOR_ATTACKER,
                        COLOR_CORNER, COLOR_DARK, COLOR_DEFENDER, COLOR_GRID,
                        COLOR_KING, COLOR_LIGHT, COLOR_SELECTED, COLOR_THRONE,
-                       COLOR_VALID, DEFENDER, EMPTY, KING)
+                       COLOR_VALID, DEFENDER, EMPTY, KING, INFO_PANEL_WIDTH, ATTACKER_PLAYER, DIFFICULTIES, WINDOW_TITLE)
 
+BG_COLOR = (30, 25, 20)
+PANEL_COLOR = (20, 18, 14)
+TEXT_COLOR = (220, 210, 190)
+DIM_COLOR = (120, 110, 90)
+ACCENT = (210, 165, 40)
 
 class BoardRenderer:
-    def __init__(self, screen: pygame.Surface, game_state) -> None:
-        self.screen = screen
+    def __init__(self, board_size, game_state) -> None:
+        w, h = self.window_size(board_size)
+        self.screen = pygame.display.set_mode((w, h))
         self.game_state = game_state
         self.cell_size = CELL_SIZE
         self.margin = BOARD_MARGIN
@@ -16,6 +22,16 @@ class BoardRenderer:
         self.selected_position = None
         self.valid_moves = []
         self.last_moved = None
+
+        self.font_big = pygame.font.SysFont("Segoe UI", 20, bold=True)
+        self.font_med = pygame.font.SysFont("Segoe UI", 16)
+        self.font_sm = pygame.font.SysFont("Segoe UI", 13)
+        self.fonts = (self.font_big, self.font_med, self.font_sm)
+        self.panel_x = CELL_SIZE * board_size + BOARD_MARGIN * 2
+
+        self.difficulty = DIFFICULTIES["Medium"]
+
+        pygame.display.set_caption(WINDOW_TITLE)
 
     # ---- Public Setters ---------------------------------------------------------------------------------
 
@@ -156,3 +172,113 @@ class BoardRenderer:
                         points,
                     )
                     pygame.draw.polygon(self.screen, (180, 130, 0), points, 2)
+
+    def window_size(self, board_size: int) -> tuple:
+        board_px = CELL_SIZE * board_size + BOARD_MARGIN * 2
+        return board_px + INFO_PANEL_WIDTH, board_px
+
+    def draw_panel(self, difficulty):
+        font_big, font_med, font_sm = self.fonts
+        w = INFO_PANEL_WIDTH
+        h = self.screen.get_height()
+        x = self.panel_x + 14
+
+        pygame.draw.rect(self.screen, PANEL_COLOR, (self.panel_x, 0, w, h))
+        pygame.draw.line(self.screen, (60, 50, 35), (self.panel_x, 0), (self.panel_x, h), 2)
+
+        y = 18
+
+        # Title
+        s = font_big.render("Hnefatafl", True, ACCENT)
+        self.screen.blit(s, (x, y))
+        y += s.get_height() + 2
+        s = font_sm.render("Viking Chess  ·   AI", True, DIM_COLOR)
+        self.screen.blit(s, (x, y))
+        y += s.get_height() + 16
+
+        # Divider
+        pygame.draw.line(self.screen, (60, 50, 35), (self.panel_x + 10, y), (self.panel_x + w - 10, y), 1)
+        y += 10
+
+        # Current turn
+        s = font_sm.render("Current Turn", True, DIM_COLOR)
+        self.screen.blit(s, (x, y))
+        y += s.get_height() + 4
+
+        player = self.game_state.current_player.capitalize()
+        color = (
+            (220, 80, 60)
+            if self.game_state.current_player == ATTACKER_PLAYER
+            else (200, 200, 180)
+        )
+        s = font_big.render(player, True, color)
+        self.screen.blit(s, (x, y))
+        y += s.get_height() + 16
+
+        # Divider
+        pygame.draw.line(self.screen, (60, 50, 35), (self.panel_x + 10, y), (self.panel_x + w - 10, y), 1)
+        y += 10
+
+        # Difficulty
+        s = font_sm.render("Difficulty", True, DIM_COLOR)
+        self.screen.blit(s, (x, y))
+        y += s.get_height() + 4
+        s = font_med.render(difficulty, True, TEXT_COLOR)
+        self.screen.blit(s, (x, y))
+        y += s.get_height() + 2
+        s = font_sm.render(f"Depth: {DIFFICULTIES.get(difficulty)}", True, DIM_COLOR)
+        self.screen.blit(s, (x, y))
+        y += s.get_height() + 16
+
+        # Divider
+        pygame.draw.line(self.screen, (60, 50, 35), (self.panel_x + 10, y), (self.panel_x + w - 10, y), 1)
+        y += 10
+
+        # Piece counts
+        s = font_sm.render("Pieces on board", True, DIM_COLOR)
+        self.screen.blit(s, (x, y))
+        y += s.get_height() + 4
+
+        counts = self.game_state.count_pieces()
+        for label, key, color in [
+            ("Attackers", 1, (220, 80, 60)),
+            ("Defenders", 2, (200, 200, 180)),
+        ]:
+            s = font_sm.render(f"{label}: {counts.get(key, 0)}", True, color)
+            self.screen.blit(s, (x, y))
+            y += s.get_height() + 3
+
+        # Game over
+        if self.game_state.game_over:
+            y += 16
+            pygame.draw.line(
+                self.screen, (60, 50, 35), (self.panel_x + 10, y), (self.panel_x + w - 10, y), 1
+            )
+            y += 12
+            winner = self.game_state.winner.capitalize() if self.game_state.winner else "Nobody"
+            s = font_big.render(f"{winner} wins!", True, ACCENT)
+            self.screen.blit(s, (x, y))
+            y += s.get_height() + 6
+            s = font_sm.render("Press R to restart", True, DIM_COLOR)
+            self.screen.blit(s, (x, y))
+
+        # Controls at bottom
+        by = h - 55
+        pygame.draw.line(
+            self.screen, (60, 50, 35), (self.panel_x + 10, by), (self.panel_x + w - 10, by), 1
+        )
+        by += 8
+        for line in ["[Click] Select / Move", "[R] Restart   [Q] Quit"]:
+            s = font_sm.render(line, True, DIM_COLOR)
+            self.screen.blit(s, (x, by))
+            by += s.get_height() + 3
+
+    def set_difficulty(self, difficulty):
+        self.difficulty = difficulty
+
+        
+    def update_board(self):
+        self.screen.fill(BG_COLOR)
+        self.draw()
+        self.draw_labels(self.font_sm)
+        self.draw_panel(self.difficulty)
