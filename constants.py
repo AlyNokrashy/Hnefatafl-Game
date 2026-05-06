@@ -15,6 +15,9 @@ DIRECTIONS = [
 ATTACKER_PLAYER = "attacker"
 DEFENDER_PLAYER = "defender"
 
+HUMAN = 0
+AI = 1
+
 # ── Board sizes ──────────────────────────────────────────────
 BOARD_9 = 9
 BOARD_11 = 11
