@@ -1,10 +1,10 @@
-import sys
+import sys, time
 
 import pygame
 
 from constants import (ATTACKER_PLAYER, BOARD_MARGIN, CELL_SIZE,
                        DEFAULT_BOARD_SIZE, DEFENDER_PLAYER, DIFFICULTIES, ROLES,
-                       FPS, INFO_PANEL_WIDTH, WINDOW_TITLE)
+                       FPS, INFO_PANEL_WIDTH, WINDOW_TITLE, ATTACKER, DEFENDER)
 from gui.board_renderer import BoardRenderer
 from logic.state import GameState
 from logic.rules import get_possible_moves, is_current_player_piece, check_captures
@@ -127,7 +127,7 @@ def main(board_size: int = DEFAULT_BOARD_SIZE):
     w, h = window_size(board_size)
     screen = pygame.display.set_mode((w, h))
     pygame.display.set_caption(WINDOW_TITLE)
-    aiRole, difficulty = run_menu(screen)
+    humanRole, difficulty = run_menu(screen)
 
     clock = pygame.time.Clock()
 
@@ -139,10 +139,13 @@ def main(board_size: int = DEFAULT_BOARD_SIZE):
     panel_x = CELL_SIZE * board_size + BOARD_MARGIN * 2
 
     game_state = GameState(board_size)
-    aiPlayer = AI_Player(difficulty=DIFFICULTIES.get(difficulty), isAttacker=ROLES.get(aiRole))
+    # Setting up the AI player
+    aiRole = ATTACKER_PLAYER if ROLES.get(humanRole) == DEFENDER_PLAYER else DEFENDER_PLAYER
+    aiPlayer = AI_Player(difficulty=DIFFICULTIES.get(difficulty), role=aiRole)
     renderer = BoardRenderer(screen, game_state)
     # print(game_state.getAttackerPieces())
     # print(game_state.getDefenderPieces())
+
 
     # ── Click handler ─────────────────────────────────────────
     def handle_click(px, py):
@@ -174,6 +177,21 @@ def main(board_size: int = DEFAULT_BOARD_SIZE):
         else:
             renderer.clear_selection()
 
+    # piece and move are tuples of coordinates
+    def applyAIMove(piece, move):
+        game_state.get_piece_at(piece[0], piece[1])
+        valid_moves = get_possible_moves(game_state, piece)
+        currentTime = pygame.time.get_ticks()
+        renderer.set_selection(piece, valid_moves)
+        pygame.display.flip() # Force a redraw so we see the selection
+
+        game_state.apply_move(piece, move)
+        game_state.record_move(piece, move, check_captures(game_state, move))
+        renderer.clear_selection()
+
+        print("finished the second handle")
+    
+
     # ── Game loop ─────────────────────────────────────────────
     running = True
     while running:
@@ -189,15 +207,21 @@ def main(board_size: int = DEFAULT_BOARD_SIZE):
                 if event.key == pygame.K_q:
                     running = False
                 elif event.key == pygame.K_r:
-                    aiRole, difficulty = run_menu(screen)
+                    humanRole, difficulty = run_menu(screen)
                     game_state = GameState(board_size)
-                    aiPlayer = AI_Player(difficulty=DIFFICULTIES.get(difficulty), isAttacker=ROLES.get(aiRole))
+                    aiRole = ATTACKER_PLAYER if ROLES.get(humanRole) == DEFENDER_PLAYER else DEFENDER_PLAYER
+                    aiPlayer = AI_Player(difficulty=DIFFICULTIES.get(difficulty), role=aiRole)
                     renderer = BoardRenderer(screen, game_state)
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 handle_click(*event.pos)
 
-        # ── Member 3: AI turn ───────────────
-        #
+        # Memeber 3
+        if not game_state.game_over and game_state.current_player == aiRole:
+            # Add a small delay or check so the AI doesn't move 
+            # the exact millisecond the player finishes their turn
+            initial, final = aiPlayer.getBestMove(gameState=game_state)
+            print("got the move")
+            applyAIMove(initial, final)
         # ── Member 3 block ends ───────────────────────────────
 
         screen.fill(BG_COLOR)

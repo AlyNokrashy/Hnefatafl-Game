@@ -42,20 +42,19 @@ COLOR_SELECTED = (50, 220, 80)
 COLOR_VALID = (80, 160, 255)
 
 # ── Difficulty depth map ──────────────────
-DIFFICULTY_DEPTH = {
-    "Easy": 1,
-    "Medium": 3,
-    "Hard": 5,
-}
 
 DIFFICULTIES = {
-    "Easy": 0,
-    "Medium": 1,
-    "Hard": 2
+    "Easy": 3,
+    "Medium": 5,
+    "Hard": 7
 }
 # ["Easy", "Medium", "Hard"]
 ROLES        = {
-    "Attacker": 1,
-    "Defender": 0
+    "Attacker": ATTACKER_PLAYER,
+    "Defender": DEFENDER_PLAYER
 
 }
+
+POINTS_FOR_SURROUNDING = 8
+
+POINTS_FOR_CORNER_DISTANCE = 5

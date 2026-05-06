@@ -1,5 +1,5 @@
 import copy
-from .rules import get_possible_moves
+from .rules import get_possible_moves, check_captures
 
 from constants import (ATTACKER, ATTACKER_PLAYER, BOARD_11, DEFAULT_BOARD_SIZE,
                        DEFENDER, DEFENDER_PLAYER, EMPTY, KING)
@@ -231,6 +231,13 @@ class GameState:
             if self.current_player == ATTACKER_PLAYER
             else ATTACKER_PLAYER
         )
+
+    # Returns a copy of the state and applies the new move to the copy
+    def getResultingState(self, oldLocation: tuple[int, int], newLocation : tuple[int, int]) -> "GameState":
+        newState = self.clone_state()
+        newState.record_move(from_position=oldLocation, to_position=newLocation, 
+                             captured_positions=check_captures(game_state=newState, pos=newLocation))
+        return newState
 
     # return piece at (row,col) or None if out of bounds
     def get_piece_at(self, row, col) -> int | None:
