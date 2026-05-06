@@ -3,7 +3,8 @@ import pygame
 from constants import (ATTACKER, BOARD_MARGIN, CELL_SIZE, COLOR_ATTACKER,
                        COLOR_CORNER, COLOR_DARK, COLOR_DEFENDER, COLOR_GRID,
                        COLOR_KING, COLOR_LIGHT, COLOR_SELECTED, COLOR_THRONE,
-                       COLOR_VALID, DEFENDER, EMPTY, KING, INFO_PANEL_WIDTH, ATTACKER_PLAYER, DIFFICULTIES, WINDOW_TITLE)
+                       COLOR_VALID, DEFENDER, EMPTY, KING, INFO_PANEL_WIDTH, ATTACKER_PLAYER, DIFFICULTIES, WINDOW_TITLE,
+                       DEFAULT_BOARD_SIZE)
 
 BG_COLOR = (30, 25, 20)
 PANEL_COLOR = (20, 18, 14)
@@ -12,10 +13,10 @@ DIM_COLOR = (120, 110, 90)
 ACCENT = (210, 165, 40)
 
 class BoardRenderer:
-    def __init__(self, board_size, game_state) -> None:
+    def __init__(self, board_size = DEFAULT_BOARD_SIZE, difficulty = "Medium") -> None:
         w, h = self.window_size(board_size)
+        self.board_size = board_size
         self.screen = pygame.display.set_mode((w, h))
-        self.game_state = game_state
         self.cell_size = CELL_SIZE
         self.margin = BOARD_MARGIN
 
@@ -29,7 +30,7 @@ class BoardRenderer:
         self.fonts = (self.font_big, self.font_med, self.font_sm)
         self.panel_x = CELL_SIZE * board_size + BOARD_MARGIN * 2
 
-        self.difficulty = DIFFICULTIES["Medium"]
+        self.difficulty = difficulty
 
         pygame.display.set_caption(WINDOW_TITLE)
 
@@ -59,7 +60,7 @@ class BoardRenderer:
     def screen_to_board(self, px, py) -> tuple[int, int] | None:
         col = (px - self.margin) // self.cell_size
         row = (py - self.margin) // self.cell_size
-        size = self.game_state.board_size
+        size = self.board_size
         if 0 <= row < size and 0 <= col < size:
             return (row, col)
         return None
@@ -70,14 +71,14 @@ class BoardRenderer:
     # 1.draw cell
     # 2.draw highlights
     # 3.draw pieces
-    def draw(self) -> None:
-        self._draw_cells()
+    def draw(self, game_state) -> None:
+        self._draw_cells(game_state)
         self._draw_highlights()
-        self._draw_pieces()
+        self._draw_pieces(game_state)
 
     # draw row and col labels around board
     def draw_labels(self, font) -> None:
-        size = self.game_state.board_size
+        size = self.board_size
         labels = "ABCDEFGHIJK"
         dim = (120, 100, 70)
         for i in range(size):
@@ -90,15 +91,15 @@ class BoardRenderer:
 
     # -------------------------------------------------------------------------------------------------------------
     # draw board grid
-    def _draw_cells(self) -> None:
-        size = self.game_state.board_size
+    def _draw_cells(self, game_state) -> None:
+        size = self.board_size
         cell_size = self.cell_size
         for row in range(size):
             for col in range(size):
                 x, y = self.board_to_screen(row, col)
-                if self.game_state.is_corner(row, col):
+                if game_state.is_corner(row, col):
                     color = COLOR_CORNER
-                elif self.game_state.is_throne(row, col):
+                elif game_state.is_throne(row, col):
                     color = COLOR_THRONE
                 else:
                     color = color = COLOR_LIGHT if (row + col) % 2 == 0 else COLOR_DARK
@@ -131,9 +132,9 @@ class BoardRenderer:
             pygame.draw.rect(self.screen, COLOR_VALID, rect)
 
     # draws all peieces
-    def _draw_pieces(self) -> None:
-        board = self.game_state.board
-        size = self.game_state.board_size
+    def _draw_pieces(self, game_state) -> None:
+        board = game_state.board
+        size = self.board_size
         cell_size = self.cell_size
         radius = cell_size // 2 - 6
 
@@ -177,7 +178,7 @@ class BoardRenderer:
         board_px = CELL_SIZE * board_size + BOARD_MARGIN * 2
         return board_px + INFO_PANEL_WIDTH, board_px
 
-    def draw_panel(self, difficulty):
+    def draw_panel(self, difficulty, game_state):
         font_big, font_med, font_sm = self.fonts
         w = INFO_PANEL_WIDTH
         h = self.screen.get_height()
@@ -205,10 +206,10 @@ class BoardRenderer:
         self.screen.blit(s, (x, y))
         y += s.get_height() + 4
 
-        player = self.game_state.current_player.capitalize()
+        player = game_state.current_player.capitalize()
         color = (
             (220, 80, 60)
-            if self.game_state.current_player == ATTACKER_PLAYER
+            if game_state.current_player == ATTACKER_PLAYER
             else (200, 200, 180)
         )
         s = font_big.render(player, True, color)
@@ -239,7 +240,7 @@ class BoardRenderer:
         self.screen.blit(s, (x, y))
         y += s.get_height() + 4
 
-        counts = self.game_state.count_pieces()
+        counts = game_state.count_pieces()
         for label, key, color in [
             ("Attackers", 1, (220, 80, 60)),
             ("Defenders", 2, (200, 200, 180)),
@@ -249,13 +250,13 @@ class BoardRenderer:
             y += s.get_height() + 3
 
         # Game over
-        if self.game_state.game_over:
+        if game_state.game_over:
             y += 16
             pygame.draw.line(
                 self.screen, (60, 50, 35), (self.panel_x + 10, y), (self.panel_x + w - 10, y), 1
             )
             y += 12
-            winner = self.game_state.winner.capitalize() if self.game_state.winner else "Nobody"
+            winner = game_state.winner.capitalize() if game_state.winner else "Nobody"
             s = font_big.render(f"{winner} wins!", True, ACCENT)
             self.screen.blit(s, (x, y))
             y += s.get_height() + 6
@@ -273,12 +274,9 @@ class BoardRenderer:
             self.screen.blit(s, (x, by))
             by += s.get_height() + 3
 
-    def set_difficulty(self, difficulty):
-        self.difficulty = difficulty
 
-        
-    def update_board(self):
+    def update_board(self, game_state):
         self.screen.fill(BG_COLOR)
-        self.draw()
+        self.draw(game_state)
         self.draw_labels(self.font_sm)
-        self.draw_panel(self.difficulty)
+        self.draw_panel(self.difficulty, game_state)
