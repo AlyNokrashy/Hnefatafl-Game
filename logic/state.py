@@ -1,4 +1,5 @@
 import copy
+from .rules import get_possible_moves
 
 from constants import (ATTACKER, ATTACKER_PLAYER, BOARD_11, DEFAULT_BOARD_SIZE,
                        DEFENDER, DEFENDER_PLAYER, EMPTY, KING)
@@ -218,9 +219,9 @@ class GameState:
         return clone
 
     # game finished
-    def set_game_over(self, winner: str | None = None) -> None:
-        self.game_over = True
-        self.winner = winner
+    # def set_game_over(self, winner: str | None = None) -> None:
+    #     self.game_over = True
+    #     self.winner = winner
 
     # ------------------ Helpers ---------------------------------------------------------------------------------------------------------------------
 
@@ -270,6 +271,50 @@ class GameState:
                 if piece in count:
                     count[piece] += 1
         return count
+    
+    def getAttackerPieces(self) -> list[tuple[int, int]]:
+        pieces = []
+        for row in range(self.board_size):
+            for col in range(self.board_size):
+                if self.board[row][col] == ATTACKER:
+                    pieces.append((row, col))
+        return pieces
+    
+    def getDefenderPieces(self) -> list[tuple[int, int]]:
+        pieces = []
+        for row in range(self.board_size):
+            for col in range(self.board_size):
+                if self.board[row][col] == DEFENDER or self.board[row][col] == KING:
+                    pieces.append((row, col))
+        return pieces
+                
+    
+    # Checks if game over and sets the state
+    def check_game_over(self) -> bool:
+        king_pos = self.get_king_position()
+        attackerWon = False
+
+        # Attackers win: king captured
+        if king_pos is None:
+            attackerWon = True
+
+        # Defenders win: king reached a corner
+        kr, kc = king_pos
+        if self.is_corner(kr, kc):
+            attackerWon = False
+
+        # Current player has no moves
+        pieces = [ATTACKER] if self.current_player == ATTACKER_PLAYER else [DEFENDER, KING]
+        for piece in pieces:
+            for position in self.get_all_pieces(piece):
+                if get_possible_moves(self, position):
+                    self.game_over = False
+                    return False
+
+        self.game_over = True
+        self.winner = ATTACKER if attackerWon else DEFENDER
+        return True
+
 
     # ----------------------------------------------------------------------------------------------------------------
 
