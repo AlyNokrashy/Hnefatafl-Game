@@ -87,8 +87,6 @@ class Controller:
             self.current_time = pygame.time.get_ticks()
             self.can_move = self.current_time - self.last_move_time > DELAY
 
-            # print(self.can_move)
-            # print(current_player_type)
             # Listen for events
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -107,7 +105,6 @@ class Controller:
                         and event.button == 1 
                         and self.can_move
                         and current_player_type == HUMAN):
-                    print("You can make your move!")
                     self.play_human_turn(event)
 
                     self.renderer.update_board(self.game_state)
@@ -136,9 +133,7 @@ class Controller:
 
 
     def play_AI_turn(self):
-        print("AI moved")
         initial, final = self.aiPlayer.getBestMove(gameState=self.game_state)
-        print("got the move")
         self.applyAIMove(initial, final)
         self.last_move_time = pygame.time.get_ticks()
 
@@ -185,7 +180,6 @@ class Controller:
         self.game_state.record_move(piece, move, check_captures(self.game_state, move))
         self.renderer.clear_selection()
 
-        print("finished the second handle")
 
 
 def main():

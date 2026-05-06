@@ -6,7 +6,6 @@ from .rules import get_possible_moves, is_valid_move
 
 class AI_Player:
     def __init__(self, difficulty: int, role: str) -> None:
-        print(f"aiRole {role}")
         self.role = role
         self.depth = difficulty
 
@@ -46,10 +45,8 @@ class AI_Player:
         pieces = gameState.getAttackerPieces() if isMaximizing else gameState.getDefenderPieces()
         moves = []
         for i, j in pieces:
-            # print(f"Pos ({i}, {j}): can go to {get_possible_moves(gameState, (i, j))}")
             for move in get_possible_moves(game_state=gameState, position=(i, j)):
                 moves.append([(i, j), move])
-        #print(f"Moves: {moves}")
         return moves
             
     def alphabeta(self, gameState, depth, alpha, beta, isMaximizing):
@@ -59,10 +56,7 @@ class AI_Player:
         if isMaximizing:
             maxValue = -INF
             for move in self.get_moves(gameState, isMaximizing):
-                # print(f"Old game state:\n{gameState}")
                 newState = gameState.getResultingState(oldLocation=move[0], newLocation=move[1])
-                # player = "A" if isMaximizing else "D"
-                # print(f"Player: {player} from {move[0]} to {move[1]} New state:\n{newState}")
                 tmp = self.alphabeta(newState, depth - 1, alpha, beta, False)
                 maxValue = max(maxValue, tmp)
 
@@ -104,6 +98,4 @@ class AI_Player:
                     bestScore = score
                     bestMove = move
             
-
-        print(f"Best move: {bestMove}, score: {score}")
         return bestMove
