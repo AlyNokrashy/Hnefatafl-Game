@@ -11,7 +11,7 @@ class AI_Player:
 
     # Uses distance from corner for minimizing player
     # Uses number of attackers around the king for maximizing player
-    def evaluate(self, isMaximizing: bool, gameState: GameState, steps: int) -> int:
+    def evaluate(self, gameState: GameState, steps: int) -> int:
         if (gameState.check_game_over()):
             steps *= STEP_FACTOR
             return (INF - steps) if gameState.winner == ATTACKER else (-INF + steps)
@@ -51,7 +51,7 @@ class AI_Player:
             
     def alphabeta(self, gameState, depth, alpha, beta, isMaximizing):
         if (gameState.check_game_over() or depth == 0):
-            return self.evaluate(isMaximizing, gameState, self.depth - depth)
+            return self.evaluate(gameState, self.depth - depth)
 
         if isMaximizing:
             maxValue = -INF
