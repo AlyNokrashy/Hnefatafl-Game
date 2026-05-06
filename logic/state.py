@@ -181,9 +181,9 @@ class GameState:
         to_position,
         captured_positions: list[tuple[int, int]] | None = None):
 
-        from_row, from_col = from_position
+        to_row, to_col = to_position
 
-        piece = self.board[from_row][from_col]
+        piece = self.board[to_row][to_col]
         self.move_history.append(
             {
                 "from": from_position,
@@ -235,6 +235,7 @@ class GameState:
     # Returns a copy of the state and applies the new move to the copy
     def getResultingState(self, oldLocation: tuple[int, int], newLocation : tuple[int, int]) -> "GameState":
         newState = self.clone_state()
+        newState.apply_move(oldLocation, newLocation)
         newState.record_move(from_position=oldLocation, to_position=newLocation, 
                              captured_positions=check_captures(game_state=newState, pos=newLocation))
         return newState
@@ -303,12 +304,16 @@ class GameState:
 
         # Attackers win: king captured
         if king_pos is None:
-            attackerWon = True
+            self.game_over = True
+            self.winner    = ATTACKER
+            return True
 
         # Defenders win: king reached a corner
         kr, kc = king_pos
         if self.is_corner(kr, kc):
-            attackerWon = False
+            self.game_over = True
+            self.winner    = DEFENDER
+            return True
 
         # Current player has no moves
         pieces = [ATTACKER] if self.current_player == ATTACKER_PLAYER else [DEFENDER, KING]
@@ -327,9 +332,9 @@ class GameState:
 
     def __str__(self) -> str:
         symbols = {EMPTY: ".", ATTACKER: "A", DEFENDER: "D", KING: "K"}
-        header = "   " + " ".join("ABCDEFGHIJK"[: self.board_size])
+        header = "   " + " ".join("012345678910"[: self.board_size])
         rows = [
-            f"{i+1:2} " + " ".join(symbols[cell] for cell in row)
+            f"{i:2} " + " ".join(symbols[cell] for cell in row)
             for i, row in enumerate(self.board)
         ]
         return "\n".join([header] + rows)

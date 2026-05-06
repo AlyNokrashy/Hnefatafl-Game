@@ -48,9 +48,9 @@ COLOR_VALID = (80, 160, 255)
 # ── Difficulty depth map ──────────────────
 
 DIFFICULTIES = {
-    "Easy": 3,
-    "Medium": 5,
-    "Hard": 7
+    "Easy": 1,
+    "Medium": 3,
+    "Hard": 5
 }
 # ["Easy", "Medium", "Hard"]
 ROLES        = {
@@ -62,3 +62,7 @@ ROLES        = {
 POINTS_FOR_SURROUNDING = 8
 
 POINTS_FOR_CORNER_DISTANCE = 5
+
+STEP_FACTOR = 2
+
+INF = 1000
